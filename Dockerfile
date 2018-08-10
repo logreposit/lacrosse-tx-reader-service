@@ -25,6 +25,7 @@ WORKDIR /opt/logreposit/lacrosse-tx-reader-service
 ADD src/lacrosse-tx-reader-service.py /opt/logreposit/lacrosse-tx-reader-service/lacrosse-tx-reader-service.py
 ADD run.sh                            /opt/logreposit/lacrosse-tx-reader-service/run.sh
 
-RUN chmod +x /opt/logreposit/lacrosse-tx-reader-service/run.sh
+RUN chmod +x /opt/logreposit/lacrosse-tx-reader-service/lacrosse-tx-reader-service.py && \
+    chmod +x /opt/logreposit/lacrosse-tx-reader-service/run.sh
 
 CMD [ "sh", "-c", "/opt/logreposit/lacrosse-tx-reader-service/run.sh" ]

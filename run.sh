@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -eu
+set -eux
 
 echo "Starting Application lacrosse-tx-reader-service ..."
 
@@ -27,9 +27,7 @@ run_application()
 {
     echo "Starting rtl_433 and piping output to lacrosse-tx-reader-service ..."
 
-    chmod +x ./lacrosse-tx-reader-service.py
-
-    rtl_433 -q -F json -U -R 75 -R 76 -f 868240000 | ./lacrosse-tx-reader-service.py
+    rtl_433 -q -F json -U -R 75 -R 76 -f 868240000 | python3 ./lacrosse-tx-reader-service.py
 }
 
 main
