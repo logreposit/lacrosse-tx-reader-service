@@ -27,3 +27,4 @@ run_application()
 {
     rtl_433 -q -F json -U -R 75 -R 76 -f 868240000 | ./lacrosse-tx-reader-service.py
 }
+
