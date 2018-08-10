@@ -12,8 +12,8 @@ RUN cmake ../ -DDETACH_KERNEL_DRIVER=ON && make && make install
 
 WORKDIR /opt/logreposit/lacrosse-tx-reader-service
 
-ADD src/lacrosse_reader_service.py /opt/logreposit/lacrosse-tx-reader-service/lacrosse_reader_service.py
-ADD run.sh                         /opt/logreposit/lacrosse-tx-reader-service/run.sh
+ADD src/lacrosse-tx-reader-service.py /opt/logreposit/lacrosse-tx-reader-service/lacrosse-tx-reader-service.py
+ADD run.sh                            /opt/logreposit/lacrosse-tx-reader-service/run.sh
 
 RUN chmod +x /opt/logreposit/lacrosse-tx-reader-service/run.sh
 
