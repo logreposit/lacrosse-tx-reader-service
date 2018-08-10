@@ -4,6 +4,7 @@ import json
 import os
 import sys
 
+print("INFO: INIT: lacrosse-tx-reader-service started ...")
 
 CONFIGURATION_FILENAME = 'config.json'
 
