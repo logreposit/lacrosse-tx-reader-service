@@ -25,6 +25,9 @@ verify_configuration()
 
 run_application()
 {
+    echo "Starting rtl_433 and piping output to lacrosse-tx-reader-service ..."
+
     rtl_433 -q -F json -U -R 75 -R 76 -f 868240000 | ./lacrosse-tx-reader-service.py
 }
 
+main
