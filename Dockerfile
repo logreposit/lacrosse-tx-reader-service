@@ -27,4 +27,4 @@ ADD run.sh                            /opt/logreposit/lacrosse-tx-reader-service
 
 RUN chmod +x /opt/logreposit/lacrosse-tx-reader-service/run.sh
 
-ENTRYPOINT [ "/opt/logreposit/lacrosse-tx-reader-service/run.sh" ]
+CMD [ "sh", "-c", "/opt/logreposit/lacrosse-tx-reader-service/run.sh" ]
