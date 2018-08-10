@@ -85,6 +85,10 @@ def _parse_line_and_publish_values(retrieved_line, api_base_url, device_token, m
 
     _validate_json_input(json_input=parsed_line)
 
+    # TODO dom: just for debugging!
+    with open('log.txt', 'w') as logfile:
+        logfile.write(retrieved_line)
+
     device_id = parsed_line.get('id')
     location_name = mappings.get(device_id)
 
