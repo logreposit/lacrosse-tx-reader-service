@@ -1,0 +1,12 @@
+{
+    "locations": [
+        {
+            "name": "kitchen",
+            "deviceId": 44
+        },
+        {
+            "name": "living_room",
+            "deviceId": 34
+        }
+    ]
+}
