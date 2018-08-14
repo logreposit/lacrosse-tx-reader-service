@@ -65,8 +65,8 @@ def _check_required_environment_variables():
 
 
 def _validate_json_input(json_input):
-    if json_input.get('date') is None:
-        _log('ERROR: JSON Input did not have an `id` field.')
+    if json_input.get('time') is None:
+        _log('ERROR: JSON Input did not have an `time` field.')
         raise JSONInputNotValidError()
 
     if json_input.get('id') is None:
@@ -102,7 +102,7 @@ def _convert_to_reading(retrieved_line, location_mappings):
 
     _validate_json_input(parsed_line)
 
-    date = parsed_line.get('date')
+    date = parsed_line.get('time')
     device_id = parsed_line.get('id')
     device_model = parsed_line.get('model')
     battery = parsed_line.get('battery')
