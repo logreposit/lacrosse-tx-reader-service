@@ -122,9 +122,9 @@ def _convert_to_reading(retrieved_line, location_mappings):
     reading_battery_ok = None
     if battery is not None:
         if battery == 'OK':
-            reading_new_battery = True
+            reading_battery_ok = True
         else:
-            reading_new_battery = False
+            reading_battery_ok = False
 
     iso_date = _parse_date(date_from_rtl433=date)
 
