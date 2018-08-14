@@ -5,6 +5,7 @@ import os
 import sys
 import datetime
 import traceback
+import requests
 
 
 CONFIGURATION_FILENAME = 'config.json'
@@ -140,11 +141,33 @@ def _convert_to_reading(retrieved_line, location_mappings):
     return reading
 
 
+def _build_request_data(reading):
+    data = {
+        'deviceType': 'LACROSSE_TECHNOLOGY_TX',
+        'data': reading
+    }
+    return data
+
+
 def _publish_values(api_base_url, device_token, reading):
     _log(
         level='INFO',
         message="Publishing values to API with base-url '{}': {}".format(api_base_url, json.dumps(reading))
     )
+
+    url = api_base_url + 'ingress'
+    headers = {
+        'x-device-token': device_token
+    }
+    request_data = _build_request_data(reading=reading)
+
+    print('Publishing values to {}: {}'.format(url, json.dumps(request_data)))
+    response = requests.post(url, json=request_data, headers=headers)
+
+    if response.status_code != 202:
+        print('ERROR: Got HTTP status code \'{}\': {}'.format(response.status_code, response.text))
+    else:
+        print('Successfully published data.')
 
 
 def _parse_line_and_publish_values(retrieved_line, api_base_url, device_token, mappings):
