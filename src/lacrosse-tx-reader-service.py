@@ -150,7 +150,7 @@ def _parse_line_and_publish_values(retrieved_line, api_base_url, device_token, m
     reading = _convert_to_reading(retrieved_line=retrieved_line, location_mappings=mappings)
 
     with open('readings.txt', 'a') as logfile:
-        logfile.write(json.dumps(reading))
+        logfile.write(json.dumps(reading) + '\n')
 
     location_name = reading.get('location')
 
