@@ -19,6 +19,15 @@ class JSONInputNotValidError(Exception):
     pass
 
 
+def _get_log_prefix():
+    return datetime.datetime.utcnow().isoformat() + ' -> '
+
+
+def _log(message):
+    msg = _get_log_prefix() + message
+    print(msg)
+
+
 def _read_configuration_file():
     with open(CONFIGURATION_FILENAME) as config_file:
         config = json.load(config_file)
@@ -30,7 +39,7 @@ def _read_configuration_file_and_build_mappings():
     locations = config.get('locations')
 
     if not locations:
-        print("WARN: No locations configured.")
+        _log("WARN: No locations configured.")
         return {}
 
     mappings = {}
@@ -41,7 +50,7 @@ def _read_configuration_file_and_build_mappings():
 
         mappings[location.get('deviceId')] = location.get('name')
 
-    print("INFO: Parsed Location-Mappings: {}".format(mappings))
+    _log("INFO: Parsed Location-Mappings: {}".format(mappings))
 
     return mappings
 
@@ -50,30 +59,30 @@ def _check_required_environment_variables():
     device_token = os.getenv(DEVICE_TOKEN_ENV_VAR_NAME, None)
 
     if device_token is None:
-        print('Error: you have to specify a logreposit device-token in the env var \'{}\'!'
+        _log('Error: you have to specify a logreposit device-token in the env var \'{}\'!'
               .format(DEVICE_TOKEN_ENV_VAR_NAME))
         sys.exit(1)
 
 
 def _validate_json_input(json_input):
     if not json_input.get('id'):
-        print('ERROR: JSON Input did not have an `id` field.')
+        _log('ERROR: JSON Input did not have an `id` field.')
         raise JSONInputNotValidError()
 
     if not json_input.get('battery'):
-        print('ERROR: JSON Input did not have a `battery` field.')
+        _log('WARN: JSON Input did not have a `battery` field.')
         # raise JSONInputNotValidError()
 
     if not json_input.get('newbattery'):
-        print('ERROR: JSON Input did not have a `newbattery` field.')
+        _log('WARN: JSON Input did not have a `newbattery` field.')
         # raise JSONInputNotValidError()
 
     if not json_input.get('temperature_C'):
-        print('ERROR: JSON Input did not have a `temperature_C` field.')
+        _log('WARN: JSON Input did not have a `temperature_C` field.')
         # raise JSONInputNotValidError()
 
     if not json_input.get('mic'):
-        print('ERROR: JSON Input did not have a `mic` field.')
+        _log('WARN: JSON Input did not have a `mic` field.')
         # raise JSONInputNotValidError
 
 
@@ -81,7 +90,7 @@ def _parse_line_and_publish_values(retrieved_line, api_base_url, device_token, m
     parsed_line = json.loads(retrieved_line)
 
     if not parsed_line:
-        print('ERROR: Could not parse line: Maybe no JSON? -> {}'.format(retrieved_line))
+        _log('ERROR: Could not parse line: Maybe no JSON? -> {}'.format(retrieved_line))
         raise JSONInputNotValidError()
 
     _validate_json_input(json_input=parsed_line)
@@ -94,10 +103,10 @@ def _parse_line_and_publish_values(retrieved_line, api_base_url, device_token, m
     location_name = mappings.get(device_id)
 
     if not location_name:
-        print("WARN: UNKNOWN LOCATION FOR DEVICE: {}".format(retrieved_line))
+        _log("WARN: UNKNOWN LOCATION FOR DEVICE: {}".format(retrieved_line))
         return
 
-    print("INFO: TODO: Publish values for location '{}' to API with base-url '{}' for deviceId '{}': {}".format(
+    _log("INFO: TODO: Publish values for location '{}' to API with base-url '{}' for deviceId '{}': {}".format(
         location_name, api_base_url, device_token, retrieved_line))
 
 
@@ -114,7 +123,7 @@ def main():
         line = sys.stdin.readline()
 
         if not line:
-            print('ERROR: No line received!')
+            _log('ERROR: No line received!')
             break
 
         try:
@@ -123,7 +132,7 @@ def main():
                                            device_token=device_token,
                                            mappings=mappings)
         except Exception as e:
-            print('ERROR: Caught exception', e)
+            print('{}ERROR: Caught exception'.format(_get_log_prefix()), e)
 
 
 if __name__ == '__main__':
