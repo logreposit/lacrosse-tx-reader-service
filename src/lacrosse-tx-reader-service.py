@@ -59,48 +59,100 @@ def _check_required_environment_variables():
     device_token = os.getenv(DEVICE_TOKEN_ENV_VAR_NAME, None)
 
     if device_token is None:
-        _log('Error: you have to specify a logreposit device-token in the env var \'{}\'!'
-              .format(DEVICE_TOKEN_ENV_VAR_NAME))
+        _log('Error: you have to specify a logreposit device-token in the env var \'{}\'!'.format(
+            DEVICE_TOKEN_ENV_VAR_NAME))
         sys.exit(1)
 
 
 def _validate_json_input(json_input):
-    if not json_input.get('id'):
+    if json_input.get('date') is None:
         _log('ERROR: JSON Input did not have an `id` field.')
         raise JSONInputNotValidError()
 
-    if not json_input.get('battery'):
+    if json_input.get('id') is None:
+        _log('ERROR: JSON Input did not have an `id` field.')
+        raise JSONInputNotValidError()
+
+    if json_input.get('battery') is None:
         _log('WARN: JSON Input did not have a `battery` field.')
-        # raise JSONInputNotValidError()
+        raise JSONInputNotValidError()
 
-    if not json_input.get('newbattery'):
+    if json_input.get('newbattery') is None:
         _log('WARN: JSON Input did not have a `newbattery` field.')
-        # raise JSONInputNotValidError()
+        raise JSONInputNotValidError()
 
-    if not json_input.get('temperature_C'):
-        _log('WARN: JSON Input did not have a `temperature_C` field.')
-        # raise JSONInputNotValidError()
-
-    if not json_input.get('mic'):
-        _log('WARN: JSON Input did not have a `mic` field.')
-        # raise JSONInputNotValidError
+    if json_input.get('model') is None:
+        _log('WARN: JSON Input did hot have a `model` field.')
+        raise JSONInputNotValidError()
 
 
-def _parse_line_and_publish_values(retrieved_line, api_base_url, device_token, mappings):
+def _parse_date(date_from_rtl433):
+    # Input format: 2018-08-14 17:10:20
+    date = datetime.datetime.strptime(date_string=date_from_rtl433, format='%Y-%m-%d %H:%M:%S')
+    timestamp = date.replace(tzinfo=datetime.timezone.utc).isoformat()
+    return timestamp
+
+
+def _convert_to_reading(retrieved_line, location_mappings):
     parsed_line = json.loads(retrieved_line)
 
     if not parsed_line:
         _log('ERROR: Could not parse line: Maybe no JSON? -> {}'.format(retrieved_line))
         raise JSONInputNotValidError()
 
-    _validate_json_input(json_input=parsed_line)
+    _validate_json_input(parsed_line)
+
+    date = parsed_line.get('date')
+    device_id = parsed_line.get('id')
+    device_model = parsed_line.get('model')
+    battery = parsed_line.get('battery')
+    new_battery = parsed_line.get('newbattery')
+    temperature = parsed_line.get('temperature_C')
+    humidity = parsed_line.get('humidity')
+
+    location = location_mappings.get(device_id)
+
+    reading_new_battery = None
+    if new_battery is not None:
+        if new_battery:
+            reading_new_battery = True
+        else:
+            reading_new_battery = False
+
+    reading_battery_ok = None
+    if battery is not None:
+        if battery == 'OK':
+            reading_new_battery = True
+        else:
+            reading_new_battery = False
+
+    iso_date = _parse_date(date_from_rtl433=date)
+
+    reading = {
+        'date': iso_date,
+        'location': location,
+        'sensorId': device_id,
+        'sensorModel': device_model,
+        'batteryNew': reading_new_battery,
+        'batteryOk': reading_battery_ok,
+        'temperature': temperature,
+        'humidity': humidity
+    }
+
+    return reading
+
+
+def _parse_line_and_publish_values(retrieved_line, api_base_url, device_token, mappings):
+    reading = _convert_to_reading(retrieved_line=retrieved_line, location_mappings=mappings)
 
     # TODO dom: just for debugging!
     with open('log.txt', 'a') as logfile:
         logfile.write(datetime.datetime.utcnow().isoformat() + ' -> ' + retrieved_line)
 
-    device_id = parsed_line.get('id')
-    location_name = mappings.get(device_id)
+    with open('readings.txt', 'a') as logfile:
+        logfile.write(json.dumps(reading))
+
+    location_name = reading.get('location')
 
     if not location_name:
         _log("WARN: UNKNOWN LOCATION FOR DEVICE: {}".format(retrieved_line))
