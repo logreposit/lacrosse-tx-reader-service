@@ -143,11 +143,11 @@ def _convert_to_reading(retrieved_line, location_mappings):
 
 
 def _parse_line_and_publish_values(retrieved_line, api_base_url, device_token, mappings):
-    reading = _convert_to_reading(retrieved_line=retrieved_line, location_mappings=mappings)
-
     # TODO dom: just for debugging!
     with open('log.txt', 'a') as logfile:
         logfile.write(datetime.datetime.utcnow().isoformat() + ' -> ' + retrieved_line)
+
+    reading = _convert_to_reading(retrieved_line=retrieved_line, location_mappings=mappings)
 
     with open('readings.txt', 'a') as logfile:
         logfile.write(json.dumps(reading))
