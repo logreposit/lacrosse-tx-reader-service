@@ -88,7 +88,7 @@ def _validate_json_input(json_input):
 
 def _parse_date(date_from_rtl433):
     # Input format: 2018-08-14 17:10:20
-    date = datetime.datetime.strptime(date_string=date_from_rtl433, format='%Y-%m-%d %H:%M:%S')
+    date = datetime.datetime.strptime(date_from_rtl433, '%Y-%m-%d %H:%M:%S')
     timestamp = date.replace(tzinfo=datetime.timezone.utc).isoformat()
     return timestamp
 
