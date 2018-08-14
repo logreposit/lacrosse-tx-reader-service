@@ -3,6 +3,7 @@
 import json
 import os
 import sys
+import datetime
 
 print("INFO: INIT: lacrosse-tx-reader-service started ...")
 
@@ -61,19 +62,19 @@ def _validate_json_input(json_input):
 
     if not json_input.get('battery'):
         print('ERROR: JSON Input did not have a `battery` field.')
-        raise JSONInputNotValidError()
+        # raise JSONInputNotValidError()
 
     if not json_input.get('newbattery'):
         print('ERROR: JSON Input did not have a `newbattery` field.')
-        raise JSONInputNotValidError()
+        # raise JSONInputNotValidError()
 
     if not json_input.get('temperature_C'):
         print('ERROR: JSON Input did not have a `temperature_C` field.')
-        raise JSONInputNotValidError()
+        # raise JSONInputNotValidError()
 
     if not json_input.get('mic'):
         print('ERROR: JSON Input did not have a `mic` field.')
-        raise JSONInputNotValidError
+        # raise JSONInputNotValidError
 
 
 def _parse_line_and_publish_values(retrieved_line, api_base_url, device_token, mappings):
@@ -87,7 +88,7 @@ def _parse_line_and_publish_values(retrieved_line, api_base_url, device_token, m
 
     # TODO dom: just for debugging!
     with open('log.txt', 'a') as logfile:
-        logfile.write(retrieved_line)
+        logfile.write(datetime.datetime.utcnow().isoformat() + ' -> ' + retrieved_line)
 
     device_id = parsed_line.get('id')
     location_name = mappings.get(device_id)
