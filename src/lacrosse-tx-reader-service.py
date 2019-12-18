@@ -202,8 +202,7 @@ def _publish_async(api_base_url, device_token, sleep_time):
             reading_collection.clear()
 
             for location, reading in collection_copy.items():
-                _log(level='DEBUG', message='_publish_async => location={}, reading={}'.format(location, reading))
-                # TODO DoM: actually publish that stuff
+                _publish_values(api_base_url=api_base_url, device_token=device_token, reading=reading)
         except:
             msg = traceback.format_exc()
             _log(level='ERROR', message='Caught exception in _publish_async: {}'.format(msg))
