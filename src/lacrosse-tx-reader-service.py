@@ -29,6 +29,7 @@ def _log(level, message):
     msg = '{} -> {}: {}'.format(log_prefix, level, message)
     print(msg)
 
+
 def _read_configuration_file():
     with open(CONFIGURATION_FILENAME) as config_file:
         config = json.load(config_file)
@@ -215,7 +216,7 @@ def main():
 
     device_token = os.getenv(DEVICE_TOKEN_ENV_VAR_NAME)
     api_base_url = os.getenv(API_BASE_URL_ENV_VAR_NAME, API_BASE_URL_DEFAULT_VALUE)
-    update_interval = os.getenv(UPDATE_INTERVAL_IN_SECONDS_ENV_VAR_NAME)
+    update_interval = int(os.getenv(UPDATE_INTERVAL_IN_SECONDS_ENV_VAR_NAME))
     mappings = _read_configuration_file_and_build_mappings()
 
     if update_interval is not None:
