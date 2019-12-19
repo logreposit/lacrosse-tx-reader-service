@@ -215,10 +215,13 @@ def main():
 
     device_token = os.getenv(DEVICE_TOKEN_ENV_VAR_NAME)
     api_base_url = os.getenv(API_BASE_URL_ENV_VAR_NAME, API_BASE_URL_DEFAULT_VALUE)
-    update_interval = int(os.getenv(UPDATE_INTERVAL_IN_SECONDS_ENV_VAR_NAME))
+    update_interval_str = os.getenv(UPDATE_INTERVAL_IN_SECONDS_ENV_VAR_NAME)
     mappings = _read_configuration_file_and_build_mappings()
 
-    if update_interval is not None:
+    update_interval = None
+
+    if update_interval_str is not None:
+        update_interval = int(update_interval_str)
         thread = threading.Thread(target=_publish_async,
                                   args=(api_base_url, device_token, update_interval),
                                   daemon=True)
