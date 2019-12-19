@@ -218,10 +218,9 @@ def main():
     update_interval_str = os.getenv(UPDATE_INTERVAL_IN_SECONDS_ENV_VAR_NAME)
     mappings = _read_configuration_file_and_build_mappings()
 
-    update_interval = None
+    update_interval = int(update_interval_str) if update_interval_str else None
 
-    if update_interval_str is not None:
-        update_interval = int(update_interval_str)
+    if update_interval is not None:
         thread = threading.Thread(target=_publish_async,
                                   args=(api_base_url, device_token, update_interval),
                                   daemon=True)
