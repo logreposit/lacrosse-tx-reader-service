@@ -1,21 +1,27 @@
 #!/usr/bin/env python3
 
+import datetime
 import json
 import os
-import sys
-import datetime
-import traceback
 import requests
+import sys
+import threading
+import time
+import traceback
 
 
 CONFIGURATION_FILENAME = 'config.json'
 API_BASE_URL_ENV_VAR_NAME = 'API_BASE_URL'
 DEVICE_TOKEN_ENV_VAR_NAME = 'DEVICE_TOKEN'
+UPDATE_INTERVAL_IN_SECONDS_ENV_VAR_NAME = 'UPDATE_INTERVAL'
 API_BASE_URL_DEFAULT_VALUE = 'https://api.logreposit.com/v1/'
 
 
 class JSONInputNotValidError(Exception):
     pass
+
+
+reading_collection = {}
 
 
 def _log(level, message):
@@ -170,7 +176,7 @@ def _publish_values(api_base_url, device_token, reading):
         print('Successfully published data.')
 
 
-def _parse_line_and_publish_values(retrieved_line, api_base_url, device_token, mappings):
+def _parse_line_and_publish_values(retrieved_line, api_base_url, device_token, mappings, update_interval):
     reading = _convert_to_reading(retrieved_line=retrieved_line, location_mappings=mappings)
 
     location_name = reading.get('location')
@@ -179,7 +185,27 @@ def _parse_line_and_publish_values(retrieved_line, api_base_url, device_token, m
         _log(level='WARN', message='UNKNOWN LOCATION FOR DEVICE \'{}\': {}'.format(reading.get('id'), retrieved_line))
         return
 
-    _publish_values(api_base_url=api_base_url, device_token=device_token, reading=reading)
+    if update_interval is None:
+        _publish_values(api_base_url=api_base_url, device_token=device_token, reading=reading)
+    else:
+        _log(level='INFO',
+             message='adding reading of sensor at location \'{}\' to the collection'.format(location_name))
+        reading_collection[location_name] = reading
+
+
+def _publish_async(api_base_url, device_token, sleep_time):
+    while True:
+        try:
+            time.sleep(sleep_time)
+
+            collection_copy = json.loads(json.dumps(reading_collection))
+            reading_collection.clear()
+
+            for location, reading in collection_copy.items():
+                _publish_values(api_base_url=api_base_url, device_token=device_token, reading=reading)
+        except:
+            msg = traceback.format_exc()
+            _log(level='ERROR', message='Caught exception in _publish_async: {}'.format(msg))
 
 
 def main():
@@ -189,7 +215,16 @@ def main():
 
     device_token = os.getenv(DEVICE_TOKEN_ENV_VAR_NAME)
     api_base_url = os.getenv(API_BASE_URL_ENV_VAR_NAME, API_BASE_URL_DEFAULT_VALUE)
+    update_interval_str = os.getenv(UPDATE_INTERVAL_IN_SECONDS_ENV_VAR_NAME)
     mappings = _read_configuration_file_and_build_mappings()
+
+    update_interval = int(update_interval_str) if update_interval_str else None
+
+    if update_interval is not None:
+        thread = threading.Thread(target=_publish_async,
+                                  args=(api_base_url, device_token, update_interval),
+                                  daemon=True)
+        thread.start()
 
     while True:
         line = sys.stdin.readline()
@@ -202,7 +237,8 @@ def main():
             _parse_line_and_publish_values(retrieved_line=line,
                                            api_base_url=api_base_url,
                                            device_token=device_token,
-                                           mappings=mappings)
+                                           mappings=mappings,
+                                           update_interval=update_interval)
         except:
             msg = traceback.format_exc()
             _log(level='ERROR', message='Caught exception: {}'.format(msg))
