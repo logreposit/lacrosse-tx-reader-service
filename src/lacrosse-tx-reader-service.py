@@ -168,7 +168,7 @@ def _publish_values(api_base_url, device_token, reading):
     request_data = _build_request_data(reading=reading)
 
     print('Publishing values to {}: {}'.format(url, json.dumps(request_data)))
-    response = requests.post(url, json=request_data, headers=headers)
+    response = requests.post(url, json=request_data, headers=headers, timeout=5)
 
     if response.status_code != 202:
         print('ERROR: Got HTTP status code \'{}\': {}'.format(response.status_code, response.text))
