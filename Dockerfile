@@ -30,6 +30,7 @@ RUN git checkout 6edb5d2bac0f1b41ef39e437263a43accd9bc1c4 && \
 WORKDIR /opt/logreposit/lacrosse-tx-reader-service
 
 ADD src/lacrosse-tx-reader-service.py /opt/logreposit/lacrosse-tx-reader-service/lacrosse-tx-reader-service.py
+ADD src/device-definition.yaml        /opt/logreposit/lacrosse-tx-reader-service/device-definition.yaml
 ADD run.sh                            /opt/logreposit/lacrosse-tx-reader-service/run.sh
 
 RUN chmod +x /opt/logreposit/lacrosse-tx-reader-service/lacrosse-tx-reader-service.py && \
