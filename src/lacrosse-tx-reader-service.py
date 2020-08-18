@@ -25,14 +25,14 @@ class JSONInputNotValidError(Exception):
 
 class Reading:
     def __init__(self,
-                 date: str,
-                 device_id: str,
-                 device_model: str,
-                 battery_ok: int,
-                 new_battery: int,
-                 location: str,
-                 temperature: float,
-                 humidity: float):
+                 date: str = None,
+                 device_id: str = None,
+                 device_model: str = None,
+                 battery_ok: int = None,
+                 new_battery: int = None,
+                 location: str = None,
+                 temperature: float = None,
+                 humidity: float = None):
         self.date = date
         self.device_id = device_id
         self.device_model = device_model
@@ -41,11 +41,6 @@ class Reading:
         self.location = location
         self.temperature = temperature
         self.humidity = humidity
-
-
-class ObjectEncoder(json.JSONEncoder):
-    def default(self, o):
-        return o.__dict__
 
 
 reading_collection = {}
@@ -289,7 +284,7 @@ def _publish_async(api_base_url, device_token, sleep_time):
         try:
             time.sleep(sleep_time)
 
-            collection_copy = json.loads(json.dumps(obj=reading_collection, cls=ObjectEncoder))
+            collection_copy = reading_collection.copy()
             reading_collection.clear()
 
             for location, reading in collection_copy.items():
