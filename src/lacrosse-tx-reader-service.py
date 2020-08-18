@@ -43,6 +43,11 @@ class Reading:
         self.humidity = humidity
 
 
+class ObjectEncoder(json.JSONEncoder):
+    def default(self, o):
+        return o.__dict__
+
+
 reading_collection = {}
 
 
@@ -284,7 +289,7 @@ def _publish_async(api_base_url, device_token, sleep_time):
         try:
             time.sleep(sleep_time)
 
-            collection_copy = json.loads(json.dumps(reading_collection))
+            collection_copy = json.loads(json.dumps(obj=reading_collection, cls=ObjectEncoder))
             reading_collection.clear()
 
             for location, reading in collection_copy.items():
