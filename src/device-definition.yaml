@@ -1,0 +1,21 @@
+# Logreposit Ingress definition file for the La Crosse TX sensor models
+
+measurements:
+  - name: data
+    tags:
+      - location
+      - sensor_id
+      - sensor_model
+    fields:
+      - name: battery_new
+        datatype: INTEGER
+        description: indicates a new battery [bool]
+      - name: battery_ok
+        datatype: INTEGER
+        description: indicates a good battery [bool]
+      - name: temperature
+        datatype: FLOAT
+        description: temperature [degrees celsius]
+      - name: humidity
+        datatype: FLOAT
+        description: humidity [%]

@@ -1,7 +1,7 @@
 FROM alpine:3.8
 
 RUN apk update && \
-    apk add --no-cache musl-dev gcc g++ make cmake libusb-dev pkgconf git python3 py3-requests
+    apk add --no-cache musl-dev gcc g++ make cmake libusb-dev pkgconf git python3 py3-requests py3-yaml
 
 WORKDIR /root/tmp
 

@@ -8,13 +8,15 @@ import sys
 import threading
 import time
 import traceback
+import yaml
 
 
 CONFIGURATION_FILENAME = 'config.json'
+DEFINITION_FILENAME = 'device-definition.yaml'
 API_BASE_URL_ENV_VAR_NAME = 'API_BASE_URL'
 DEVICE_TOKEN_ENV_VAR_NAME = 'DEVICE_TOKEN'
 UPDATE_INTERVAL_IN_SECONDS_ENV_VAR_NAME = 'UPDATE_INTERVAL'
-API_BASE_URL_DEFAULT_VALUE = 'https://api.logreposit.com/v1/'
+API_BASE_URL_DEFAULT_VALUE = 'https://api.logreposit.com/v2/'
 
 
 class JSONInputNotValidError(Exception):
@@ -35,6 +37,10 @@ def _read_configuration_file():
         config = json.load(config_file)
         return config
 
+def _read_definition():
+    with open(DEFINITION_FILENAME) as definition_file:
+        definition = yaml.load(definition_file)
+        return definition
 
 def _read_configuration_file_and_build_mappings():
     config = _read_configuration_file()
@@ -67,6 +73,13 @@ def _check_required_environment_variables():
                 DEVICE_TOKEN_ENV_VAR_NAME)
         )
         sys.exit(1)
+
+
+def _read_and_update_definition(api_base_url, device_token):
+    definition = _read_definition()
+    _update_definition(api_base_url=api_base_url,
+                       device_token=device_token,
+                       definition=definition)
 
 
 def _validate_json_input(json_input):
@@ -117,6 +130,10 @@ def _convert_to_reading(retrieved_line, location_mappings):
 
     location = location_mappings.get(device_id)
 
+    if not location_name:
+        _log(level='WARN', message='UNKNOWN LOCATION FOR DEVICE \'{}\': {}'.format(device_id, retrieved_line))
+        return None
+
     reading_new_battery = None
     if new_battery is not None:
         if new_battery:
@@ -135,22 +152,111 @@ def _convert_to_reading(retrieved_line, location_mappings):
 
     reading = {
         'date': iso_date,
-        'location': location,
-        'sensorId': device_id,
-        'sensorModel': device_model,
-        'batteryNew': reading_new_battery,
-        'batteryOk': reading_battery_ok,
-        'temperature': temperature,
-        'humidity': humidity
+        'measurement': 'data',
+        'tags': [
+            {
+                'name': 'location',
+                'value': location
+            },
+            {
+                'name': 'sensor_id',
+                'value': device_id
+            },
+            {
+                'name': 'sensor_model',
+                'value': device_model
+            }
+        ],
+        'fields': [
+            {
+                'name': 'battery_new',
+                'datatype': 'INTEGER',
+                'value': reading_new_battery
+            },
+            {
+                'name': 'battery_ok',
+                'datatype': 'INTEGER',
+                'value': reading_battery_ok
+            },
+            {
+                'name': 'temperature',
+                'datatype': 'FLOAT',
+                'value': temperature
+            },
+            {
+                'name': 'humidity',
+                'datatype': 'FLOAT',
+                'value': humidity
+            }
+        ]
     }
 
     return reading
 
 
+def _update_definition(api_base_url, device_token, definition):
+    _log(
+        level='INFO',
+        message="Updating device definition @ API with base-url '{}': {}".format(api_base_url, json.dumps(definition))
+    )
+
+    url = api_base_url + 'ingress/definition'
+    headers = {
+        'x-device-token': device_token
+    }
+
+    response = requests.put(url, json=definition, headers=headers, timeout=5)
+
+    if response.status_code != 200:
+        print('ERROR: Got HTTP status code \'{}\': {}'.format(response.status_code, response.text))
+    else:
+        print('Successfully updated definition.')
+
+
 def _build_request_data(reading):
     data = {
-        'deviceType': 'LACROSSE_TECHNOLOGY_TX',
-        'data': reading
+        'readings': [
+            {
+                'date': reading['date'],
+                'measurement': 'data',
+                'tags': [
+                    {
+                        'name': 'location',
+                        'value': reading['location']
+                    },
+                    {
+                        'name': 'sensor_id',
+                        'value': reading['sensorId']
+                    },
+                    {
+                        'name': 'sensor_model',
+                        'value': reading['sensorModel']
+                    }
+                ],
+                'fields': [
+                    {
+                        'name': 'battery_new',
+                        'datatype': 'INTEGER',
+                        'value': reading['batteryNew']
+                    },
+                    {
+                        'name': 'battery_ok',
+                        'datatype': 'INTEGER',
+                        'value': reading['batteryOk']
+                    },
+                    {
+                        'name': 'temperature',
+                        'datatype': 'FLOAT',
+                        'value': reading['temperature']
+                    },
+                    {
+                        'name': 'humidity',
+                        'datatype': 'FLOAT',
+                        'value': reading['humidity']
+                    }
+                ]
+            }
+        ]
     }
     return data
 
@@ -161,7 +267,7 @@ def _publish_values(api_base_url, device_token, reading):
         message="Publishing values to API with base-url '{}': {}".format(api_base_url, json.dumps(reading))
     )
 
-    url = api_base_url + 'ingress'
+    url = api_base_url + 'ingress/data'
     headers = {
         'x-device-token': device_token
     }
@@ -216,6 +322,10 @@ def main():
     device_token = os.getenv(DEVICE_TOKEN_ENV_VAR_NAME)
     api_base_url = os.getenv(API_BASE_URL_ENV_VAR_NAME, API_BASE_URL_DEFAULT_VALUE)
     update_interval_str = os.getenv(UPDATE_INTERVAL_IN_SECONDS_ENV_VAR_NAME)
+
+    _read_and_update_definition(api_base_url=api_base_url,
+                                device_token=device_token)
+
     mappings = _read_configuration_file_and_build_mappings()
 
     update_interval = int(update_interval_str) if update_interval_str else None
