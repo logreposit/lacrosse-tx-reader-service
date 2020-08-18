@@ -187,60 +187,66 @@ def _update_definition(api_base_url, device_token, definition):
         print('Successfully updated definition.')
 
 
-def _build_request_data(reading):
+def _build_request_data(readings):
+    request_readings = [_build_request_reading(reading=reading) for reading in readings]
+
     data = {
-        'readings': [
-            {
-                'date': reading.date,
-                'measurement': 'data',
-                'tags': [
-                    {
-                        'name': 'location',
-                        'value': reading.location
-                    },
-                    {
-                        'name': 'sensor_id',
-                        'value': reading.device_id
-                    },
-                    {
-                        'name': 'sensor_model',
-                        'value': reading.device_model
-                    }
-                ],
-                'fields': [
-                    {
-                        'name': 'battery_new',
-                        'datatype': 'INTEGER',
-                        'value': reading.new_battery
-                    },
-                    {
-                        'name': 'battery_ok',
-                        'datatype': 'INTEGER',
-                        'value': reading.battery_ok
-                    }
-                ]
-            }
-        ]
+        'readings': request_readings
     }
 
+    return data
+
+
+def _build_request_reading(reading):
+    request_reading = {
+        'date': reading.date,
+        'measurement': 'data',
+        'tags': [
+            {
+                'name': 'location',
+                'value': reading.location
+            },
+            {
+                'name': 'sensor_id',
+                'value': reading.device_id
+            },
+            {
+                'name': 'sensor_model',
+                'value': reading.device_model
+            }
+        ],
+        'fields': [
+            {
+                'name': 'battery_new',
+                'datatype': 'INTEGER',
+                'value': reading.new_battery
+            },
+            {
+                'name': 'battery_ok',
+                'datatype': 'INTEGER',
+                'value': reading.battery_ok
+            }
+        ]
+            }
+
     if reading.temperature is not None:
-        data['readings'][0]['fields'].append({
+        request_reading['fields'].append({
             'name': 'temperature',
             'datatype': 'FLOAT',
             'value': reading.temperature
         })
 
     if reading.humidity is not None:
-        data['readings'][0]['fields'].append({
+        request_reading['fields'].append({
             'name': 'humidity',
             'datatype': 'FLOAT',
             'value': reading.humidity
         })
 
-    return data
+    return request_reading
 
 
-def _publish_values(api_base_url, device_token, reading):
+def _publish_values(api_base_url, device_token, readings):
     url = api_base_url + 'ingress/data'
     headers = {
         'x-device-token': device_token
@@ -248,10 +254,10 @@ def _publish_values(api_base_url, device_token, reading):
 
     _log(
         level='INFO',
-        message="Publishing values to API: POST '{}': {}".format(url, json.dumps(reading.__dict__))
+        message="Publishing values to API: POST '{}': {}".format(url, json.dumps([r.__dict__ for r in readings]))
     )
 
-    request_data = _build_request_data(reading=reading)
+    request_data = _build_request_data(readings=readings)
 
     print('Publishing values to {}: {}'.format(url, json.dumps(request_data)))
     response = requests.post(url, json=request_data, headers=headers, timeout=5)
@@ -272,7 +278,7 @@ def _parse_line_and_publish_values(retrieved_line, api_base_url, device_token, m
         return
 
     if update_interval is None:
-        _publish_values(api_base_url=api_base_url, device_token=device_token, reading=reading)
+        _publish_values(api_base_url=api_base_url, device_token=device_token, readings=[reading])
     else:
         _log(level='INFO',
              message='adding reading of sensor at location \'{}\' to the collection'.format(location_name))
@@ -287,8 +293,8 @@ def _publish_async(api_base_url, device_token, sleep_time):
             collection_copy = reading_collection.copy()
             reading_collection.clear()
 
-            for location, reading in collection_copy.items():
-                _publish_values(api_base_url=api_base_url, device_token=device_token, reading=reading)
+            readings_to_publish = [reading for location, reading in collection_copy.items()]
+            _publish_values(api_base_url=api_base_url, device_token=device_token, readings=readings_to_publish)
         except:
             msg = traceback.format_exc()
             _log(level='ERROR', message='Caught exception in _publish_async: {}'.format(msg))
