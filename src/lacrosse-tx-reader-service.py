@@ -10,6 +10,8 @@ import time
 import traceback
 import yaml
 
+from dataclasses import dataclass
+
 
 CONFIGURATION_FILENAME = 'config.json'
 DEFINITION_FILENAME = 'device-definition.yaml'
@@ -21,6 +23,18 @@ API_BASE_URL_DEFAULT_VALUE = 'https://api.logreposit.com/v2/'
 
 class JSONInputNotValidError(Exception):
     pass
+
+
+@dataclass
+class Reading:
+    date: str
+    device_id: str
+    device_model: str
+    battery_ok: int
+    new_battery: int
+    location: str
+    temperature: float
+    humidity: float
 
 
 reading_collection = {}
@@ -37,10 +51,12 @@ def _read_configuration_file():
         config = json.load(config_file)
         return config
 
+
 def _read_definition():
     with open(DEFINITION_FILENAME) as definition_file:
         definition = yaml.load(definition_file)
         return definition
+
 
 def _read_configuration_file_and_build_mappings():
     config = _read_configuration_file()
@@ -123,73 +139,25 @@ def _convert_to_reading(retrieved_line, location_mappings):
     date = parsed_line.get('time')
     device_id = parsed_line.get('id')
     device_model = parsed_line.get('model')
-    battery = parsed_line.get('battery_ok')
+    battery_ok = parsed_line.get('battery_ok')
     new_battery = parsed_line.get('newbattery')
     temperature = parsed_line.get('temperature_C')
     humidity = parsed_line.get('humidity')
 
     location = location_mappings.get(device_id)
 
-    if not location_name:
-        _log(level='WARN', message='UNKNOWN LOCATION FOR DEVICE \'{}\': {}'.format(device_id, retrieved_line))
-        return None
-
-    reading_new_battery = None
-    if new_battery is not None:
-        if new_battery:
-            reading_new_battery = True
-        else:
-            reading_new_battery = False
-
-    reading_battery_ok = None
-    if battery is not None:
-        if battery == 1:
-            reading_battery_ok = True
-        else:
-            reading_battery_ok = False
-
     iso_date = _parse_date(date_from_rtl433=date)
 
-    reading = {
-        'date': iso_date,
-        'measurement': 'data',
-        'tags': [
-            {
-                'name': 'location',
-                'value': location
-            },
-            {
-                'name': 'sensor_id',
-                'value': device_id
-            },
-            {
-                'name': 'sensor_model',
-                'value': device_model
-            }
-        ],
-        'fields': [
-            {
-                'name': 'battery_new',
-                'datatype': 'INTEGER',
-                'value': reading_new_battery
-            },
-            {
-                'name': 'battery_ok',
-                'datatype': 'INTEGER',
-                'value': reading_battery_ok
-            },
-            {
-                'name': 'temperature',
-                'datatype': 'FLOAT',
-                'value': temperature
-            },
-            {
-                'name': 'humidity',
-                'datatype': 'FLOAT',
-                'value': humidity
-            }
-        ]
-    }
+    reading = Reading(
+        date=iso_date,
+        device_id=device_id,
+        device_model=device_model,
+        battery_ok=battery_ok,
+        new_battery=new_battery,
+        location=location,
+        temperature=temperature,
+        humidity=humidity
+    )
 
     return reading
 
@@ -217,60 +185,66 @@ def _build_request_data(reading):
     data = {
         'readings': [
             {
-                'date': reading['date'],
+                'date': reading.date,
                 'measurement': 'data',
                 'tags': [
                     {
                         'name': 'location',
-                        'value': reading['location']
+                        'value': reading.location
                     },
                     {
                         'name': 'sensor_id',
-                        'value': reading['sensorId']
+                        'value': reading.device_id
                     },
                     {
                         'name': 'sensor_model',
-                        'value': reading['sensorModel']
+                        'value': reading.device_model
                     }
                 ],
                 'fields': [
                     {
                         'name': 'battery_new',
                         'datatype': 'INTEGER',
-                        'value': reading['batteryNew']
+                        'value': reading.new_battery
                     },
                     {
                         'name': 'battery_ok',
                         'datatype': 'INTEGER',
-                        'value': reading['batteryOk']
-                    },
-                    {
-                        'name': 'temperature',
-                        'datatype': 'FLOAT',
-                        'value': reading['temperature']
-                    },
-                    {
-                        'name': 'humidity',
-                        'datatype': 'FLOAT',
-                        'value': reading['humidity']
+                        'value': reading.battery_ok
                     }
                 ]
             }
         ]
     }
+
+    if reading.temperature is not None:
+        data['readings'][0]['fields'].append({
+            'name': 'temperature',
+            'datatype': 'FLOAT',
+            'value': reading.temperature
+        })
+
+    if reading.humidity is not None:
+        data['readings'][0]['fields'].append({
+            'name': 'humidity',
+            'datatype': 'FLOAT',
+            'value': reading.humidity
+        })
+
     return data
 
 
 def _publish_values(api_base_url, device_token, reading):
-    _log(
-        level='INFO',
-        message="Publishing values to API with base-url '{}': {}".format(api_base_url, json.dumps(reading))
-    )
-
     url = api_base_url + 'ingress/data'
     headers = {
         'x-device-token': device_token
     }
+
+    _log(
+        level='INFO',
+        message="Publishing values to API: POST '{}': {}".format(url, json.dumps(reading))
+    )
+
     request_data = _build_request_data(reading=reading)
 
     print('Publishing values to {}: {}'.format(url, json.dumps(request_data)))
@@ -285,10 +259,10 @@ def _publish_values(api_base_url, device_token, reading):
 def _parse_line_and_publish_values(retrieved_line, api_base_url, device_token, mappings, update_interval):
     reading = _convert_to_reading(retrieved_line=retrieved_line, location_mappings=mappings)
 
-    location_name = reading.get('location')
+    location_name = reading.location
 
     if not location_name:
-        _log(level='WARN', message='UNKNOWN LOCATION FOR DEVICE \'{}\': {}'.format(reading.get('id'), retrieved_line))
+        _log(level='WARN', message='UNKNOWN LOCATION FOR DEVICE \'{}\': {}'.format(reading.device_id, retrieved_line))
         return
 
     if update_interval is None:
