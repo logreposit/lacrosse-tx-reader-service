@@ -10,8 +10,6 @@ import time
 import traceback
 import yaml
 
-from dataclasses import dataclass
-
 
 CONFIGURATION_FILENAME = 'config.json'
 DEFINITION_FILENAME = 'device-definition.yaml'
@@ -25,16 +23,24 @@ class JSONInputNotValidError(Exception):
     pass
 
 
-@dataclass
 class Reading:
-    date: str
-    device_id: str
-    device_model: str
-    battery_ok: int
-    new_battery: int
-    location: str
-    temperature: float
-    humidity: float
+    def __init__(self,
+                 date: str,
+                 device_id: str,
+                 device_model: str,
+                 battery_ok: int,
+                 new_battery: int,
+                 location: str,
+                 temperature: float,
+                 humidity: float):
+        self.date = date
+        self.device_id = device_id
+        self.device_model = device_model
+        self.battery_ok = battery_ok
+        self.new_battery = new_battery
+        self.location = location
+        self.temperature = temperature
+        self.humidity = humidity
 
 
 reading_collection = {}
