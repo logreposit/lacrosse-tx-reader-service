@@ -60,7 +60,7 @@ def _read_configuration_file():
 
 def _read_definition():
     with open(DEFINITION_FILENAME) as definition_file:
-        definition = yaml.load(definition_file)
+        definition = yaml.safe_load(definition_file)
         return definition
 
 
