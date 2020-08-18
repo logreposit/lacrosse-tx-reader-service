@@ -248,7 +248,7 @@ def _publish_values(api_base_url, device_token, reading):
 
     _log(
         level='INFO',
-        message="Publishing values to API: POST '{}': {}".format(url, json.dumps(reading))
+        message="Publishing values to API: POST '{}': {}".format(url, json.dumps(reading.__dict__))
     )
 
     request_data = _build_request_data(reading=reading)
