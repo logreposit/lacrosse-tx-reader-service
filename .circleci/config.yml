@@ -42,5 +42,5 @@ jobs:
 workflows:
   base-workflow:
     jobs:
-      - build:
+      - build_and_push:
           context: logreposit
