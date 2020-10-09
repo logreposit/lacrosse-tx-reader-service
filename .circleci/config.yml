@@ -21,10 +21,6 @@ jobs:
       - checkout
       - attach_workspace:
           at: /home/circleci/
-      - restore_cache:
-          keys:
-            - lacrosse-tx-reader-service-{{ checksum "Dockerfile" }}
-            - lacrosse-tx-reader-service-
       - setup_remote_docker
       - run:
           name: Build
@@ -46,6 +42,7 @@ jobs:
       - persist_to_workspace:
           root: /home/circleci/
           paths:
+            - project/*
             - docker-images/*
 
 
