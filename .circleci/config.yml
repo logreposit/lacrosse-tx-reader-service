@@ -5,11 +5,18 @@ orbs:
   codecov: codecov/codecov@1.1.1
 
 
-jobs:
-  build:
-    resource_class: small
+executors:
+  build-container:
+    environment:
+      _JAVA_OPTIONS: "-Xmx512m"
     docker:
       - image: cimg/base:stable-18.04
+
+
+jobs:
+  build:
+    executor: build-container
+    resource_class: small
     steps:
       - attach_workspace:
           at: /home/circleci/
