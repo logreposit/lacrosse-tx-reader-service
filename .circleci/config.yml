@@ -10,16 +10,20 @@ jobs:
     resource_class: medium
     docker:
       - image: cimg/base:stable-20.04
-      #- image: jdrouet/docker-with-buildx:stable
     steps:
       - checkout
       - attach_workspace:
           at: /home/circleci/
       - setup_remote_docker:
           version: 18.09.3
-#      - run:
-#          name: Install git
-#          command: apk update && apk add git
+      - run:
+          name: Setup buildx
+          command: |
+            export DOCKER_CLI_EXPERIMENTAL=enabled
+            docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+#            docker context create builder
+#            docker buildx create builder --driver docker-container --use
+#            docker buildx inspect --bootstrap
       - run:
           name: Build
           command: |
@@ -27,30 +31,14 @@ jobs:
             docker_image_tag="logreposit/lacrosse-tx-reader-service:${version}"
             echo "Building docker image ${docker_image_tag} ..."
 
-            export DOCKER_CLI_EXPERIMENTAL=enabled
-            #docker buildx create --use --name mybuild node-amd64 mybuild
-            #docker buildx create --append --name mybuild node-arm64
-            #docker buildx build --platform linux/amd64,linux/arm64 .
-            #docker buildx create --use
-            #docker buildx create --name mybuilder
-            #docker buildx use mybuilder
-            #docker context create builder
-            #docker buildx create builder --use
-            #ls /proc/sys/fs/binfmt_misc/
-
-            docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-
-            docker context create builder
-            docker buildx create builder --driver docker-container --use
-            docker buildx inspect --bootstrap
-
-            docker context ls
-            docker buildx ls
-
             docker buildx build \
-              --platform linux/arm/v7,linux/arm64/v8,linux/amd64 \
+              --platform linux/arm/v7 \
               --tag ${docker_image_tag} \
               --push .
+#            docker buildx build \
+#              --platform linux/arm/v7,linux/arm64/v8,linux/amd64 \
+#              --tag ${docker_image_tag} \
+#              --push .
 
             echo "Successfully built image ${docker_image_tag}"
       - run:
