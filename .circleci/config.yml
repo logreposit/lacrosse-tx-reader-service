@@ -9,21 +9,25 @@ jobs:
   build:
     resource_class: medium
     docker:
-      - image: cimg/base:stable-20.04
+      #- image: cimg/base:stable-20.04
+      - image: jdrouet/docker-with-buildx:stable
     steps:
       - checkout
       - attach_workspace:
           at: /home/circleci/
       - setup_remote_docker:
           version: 18.09.3
+#      - run:
+#          name: Setup buildx
+#          command: |
+#            mkdir -vp ~/.docker/cli-plugins
+#            curl --silent -L --output ~/.docker/cli-plugins/docker-buildx \
+#            https://github.com/docker/buildx/releases/download/v0.3.1/buildx-v0.3.1.linux-amd64
+#            chmod a+x ~/.docker/cli-plugins/docker-buildx
+#            docker buildx version
       - run:
-          name: Setup buildx
-          command: |
-            mkdir -vp ~/.docker/cli-plugins
-            curl --silent -L --output ~/.docker/cli-plugins/docker-buildx \
-            https://github.com/docker/buildx/releases/download/v0.3.1/buildx-v0.3.1.linux-amd64
-            chmod a+x ~/.docker/cli-plugins/docker-buildx
-            docker buildx version
+          name: Install git
+          command: apk update && apk add git
       - run:
           name: Build
           command: |
