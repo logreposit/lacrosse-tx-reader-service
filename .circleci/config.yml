@@ -1,0 +1,75 @@
+version: 2.1
+
+
+orbs:
+  codecov: codecov/codecov@1.1.1
+
+
+jobs:
+  build:
+    resource_class: small
+    docker:
+      - image: cimg/base:stable-18.04
+    steps:
+      - attach_workspace:
+          at: /home/circleci/
+      - restore_cache:
+          keys:
+            - lacrosse-tx-reader-service-{{ checksum "pom.xml" }}
+            - lacrosse-tx-reader-service-
+      - setup_remote_docker
+      - run:
+          name: Build
+          command: |
+            version=$(git describe)
+            docker_image_tag="logreposit/lacrosse-tx-reader-service:${version}"
+
+            # build docker image
+            echo "Building docker image ${docker_image_tag} ..."
+            docker build -t ${docker_image_tag} .
+            echo "Successfully built image ${docker_image_tag}"
+      - run:
+          name: Saving docker image
+          command: |
+            version=$(git describe)
+            docker_image_tag="logreposit/lacrosse-tx-reader-service:${version}"
+            mkdir ~/docker-images/
+            docker save ${docker_image_tag} > ~/docker-images/app.tar
+      - persist_to_workspace:
+          root: /home/circleci/
+          paths:
+            - docker-images/*
+
+
+  push:
+    resource_class: small
+    docker:
+      - image: cimg/base:stable-18.04
+    steps:
+      - attach_workspace:
+          at: /home/circleci/
+      - setup_remote_docker
+      - run:
+          name: Loading docker image
+          command: |
+            docker load < ~/docker-images/app.tar
+      - run:
+          name: Push
+          command: |
+            version=$(git describe)
+            docker_image_tag="logreposit/lacrosse-tx-reader-service:${version}"
+            echo ${LOGREPOSIT_DOCKERHUB_PASSWORD} | docker login -u ${LOGREPOSIT_DOCKERHUB_USERNAME} --password-stdin
+            docker push ${docker_image_tag}
+            echo "Successfully pushed image ${docker_image_tag}"
+
+
+workflows:
+  base-workflow:
+    jobs:
+      - build:
+          context: logreposit
+
+      - push:
+          context: logreposit
+          requires:
+            - build
