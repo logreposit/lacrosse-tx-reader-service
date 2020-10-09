@@ -9,8 +9,8 @@ jobs:
   build:
     resource_class: medium
     docker:
-      #- image: cimg/base:stable-20.04
-      - image: jdrouet/docker-with-buildx:stable
+      - image: cimg/base:stable-20.04
+      #- image: jdrouet/docker-with-buildx:stable
     steps:
       - checkout
       - attach_workspace:
@@ -18,16 +18,8 @@ jobs:
       - setup_remote_docker:
           version: 18.09.3
 #      - run:
-#          name: Setup buildx
-#          command: |
-#            mkdir -vp ~/.docker/cli-plugins
-#            curl --silent -L --output ~/.docker/cli-plugins/docker-buildx \
-#            https://github.com/docker/buildx/releases/download/v0.3.1/buildx-v0.3.1.linux-amd64
-#            chmod a+x ~/.docker/cli-plugins/docker-buildx
-#            docker buildx version
-      - run:
-          name: Install git
-          command: apk update && apk add git
+#          name: Install git
+#          command: apk update && apk add git
       - run:
           name: Build
           command: |
@@ -35,7 +27,7 @@ jobs:
             docker_image_tag="logreposit/lacrosse-tx-reader-service:${version}"
             echo "Building docker image ${docker_image_tag} ..."
 
-            #export DOCKER_CLI_EXPERIMENTAL=enabled
+            export DOCKER_CLI_EXPERIMENTAL=enabled
             #docker buildx create --use --name mybuild node-amd64 mybuild
             #docker buildx create --append --name mybuild node-arm64
             #docker buildx build --platform linux/amd64,linux/arm64 .
