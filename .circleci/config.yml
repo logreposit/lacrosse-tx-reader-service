@@ -23,6 +23,12 @@ jobs:
           at: /home/circleci/
       - setup_remote_docker
       - run:
+          name: Install buildx
+          command: |
+            echo "Installing buildx for docker ..."
+            git clone git://github.com/docker/buildx && cd buildx && make install
+            echo "Successfully installed buildx for docker"
+      - run:
           name: Build
           command: |
             version=$(git describe)
