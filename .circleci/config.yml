@@ -17,27 +17,32 @@ jobs:
       - setup_remote_docker:
           version: 18.09.3
       - run:
+          name: Setup buildx
+          command: |
+            mkdir -vp ~/.docker/cli-plugins
+            curl --silent -L --output ~/.docker/cli-plugins/docker-buildx \
+            https://github.com/docker/buildx/releases/download/v0.3.1/buildx-v0.3.1.linux-amd64
+            chmod a+x ~/.docker/cli-plugins/docker-buildx
+            docker buildx version
+      - run:
           name: Build
           command: |
             version=$(git describe)
             docker_image_tag="logreposit/lacrosse-tx-reader-service:${version}"
             echo "Building docker image ${docker_image_tag} ..."
-            export DOCKER_CLI_EXPERIMENTAL=enabled
 
+            #export DOCKER_CLI_EXPERIMENTAL=enabled
             #docker buildx create --use --name mybuild node-amd64 mybuild
             #docker buildx create --append --name mybuild node-arm64
             #docker buildx build --platform linux/amd64,linux/arm64 .
             #docker buildx create --use
-
             #docker buildx create --name mybuilder
             #docker buildx use mybuilder
-
-            docker context create builder
-            docker buildx create builder --use
+            #docker context create builder
+            #docker buildx create builder --use
+            #ls /proc/sys/fs/binfmt_misc/
 
             docker context ls
-            ls /proc/sys/fs/binfmt_misc/
-
             docker buildx ls
 
             docker buildx build \
