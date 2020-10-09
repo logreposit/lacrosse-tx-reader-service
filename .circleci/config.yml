@@ -22,7 +22,14 @@ jobs:
             docker_image_tag="logreposit/lacrosse-tx-reader-service:${version}"
             echo "Building docker image ${docker_image_tag} ..."
             export DOCKER_CLI_EXPERIMENTAL=enabled
-            docker buildx create --use
+
+            #docker buildx create --use --name mybuild node-amd64 mybuild
+            #docker buildx create --append --name mybuild node-arm64
+            #docker buildx build --platform linux/amd64,linux/arm64 .
+            #docker buildx create --use
+
+            docker context ls
+
             docker buildx build \
               --platform linux/arm/v7,linux/arm64/v8,linux/amd64 \
               --tag ${docker_image_tag} .
