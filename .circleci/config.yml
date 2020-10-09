@@ -21,6 +21,7 @@ jobs:
             version=$(git describe)
             docker_image_tag="logreposit/lacrosse-tx-reader-service:${version}"
             echo "Building docker image ${docker_image_tag} ..."
+            export DOCKER_CLI_EXPERIMENTAL=enabled
             docker buildx build \
               --platform linux/arm/v7,linux/arm64/v8,linux/amd64 \
               --tag ${docker_image_tag} .
