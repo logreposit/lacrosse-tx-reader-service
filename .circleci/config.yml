@@ -7,7 +7,7 @@ orbs:
 
 jobs:
   build:
-    resource_class: large
+    resource_class: medium+
     docker:
       - image: cimg/base:stable-20.04
     steps:
