@@ -15,7 +15,7 @@ jobs:
           at: /home/circleci/
       - restore_cache:
           keys:
-            - lacrosse-tx-reader-service-{{ checksum "pom.xml" }}
+            - lacrosse-tx-reader-service-{{ checksum "Dockerfile" }}
             - lacrosse-tx-reader-service-
       - setup_remote_docker
       - run:
