@@ -7,7 +7,7 @@ orbs:
 
 jobs:
   build:
-    resource_class: medium
+    resource_class: large
     docker:
       - image: cimg/base:stable-20.04
     steps:
@@ -28,6 +28,8 @@ jobs:
             version=$(git describe)
             docker_image_tag="logreposit/lacrosse-tx-reader-service:${version}"
             echo "Building docker image ${docker_image_tag} ..."
+
+            echo ${LOGREPOSIT_DOCKERHUB_PASSWORD} | docker login -u ${LOGREPOSIT_DOCKERHUB_USERNAME} --password-stdin
 
             docker buildx build \
               --platform linux/arm/v7 \
@@ -54,35 +56,8 @@ jobs:
             - docker-images/*
 
 
-  push:
-    resource_class: small
-    docker:
-      - image: cimg/base:stable-18.04
-    steps:
-      - attach_workspace:
-          at: /home/circleci/
-      - setup_remote_docker
-      - run:
-          name: Loading docker image
-          command: |
-            docker load < ~/docker-images/app.tar
-      - run:
-          name: Push
-          command: |
-            version=$(git describe)
-            docker_image_tag="logreposit/lacrosse-tx-reader-service:${version}"
-            echo ${LOGREPOSIT_DOCKERHUB_PASSWORD} | docker login -u ${LOGREPOSIT_DOCKERHUB_USERNAME} --password-stdin
-            docker push ${docker_image_tag}
-            echo "Successfully pushed image ${docker_image_tag}"
-
-
 workflows:
   base-workflow:
     jobs:
       - build:
           context: logreposit
-
-      - push:
-          context: logreposit
-          requires:
-            - build
