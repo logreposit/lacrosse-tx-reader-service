@@ -18,6 +18,7 @@ jobs:
     executor: build-container
     resource_class: small
     steps:
+      - checkout
       - attach_workspace:
           at: /home/circleci/
       - restore_cache:
