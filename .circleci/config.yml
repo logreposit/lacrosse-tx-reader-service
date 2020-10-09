@@ -19,11 +19,7 @@ jobs:
       - run:
           name: Setup buildx
           command: |
-            export DOCKER_CLI_EXPERIMENTAL=enabled
             docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-            #docker context create builder
-            #docker buildx create builder --driver docker-container --use
-            #docker buildx inspect --bootstrap
       - run:
           name: Build
           command: |
