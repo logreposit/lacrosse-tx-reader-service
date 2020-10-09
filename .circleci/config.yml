@@ -27,6 +27,8 @@ jobs:
       - run:
           name: Build
           command: |
+            export DOCKER_CLI_EXPERIMENTAL=enabled
+
             version=$(git describe)
             docker_image_tag="logreposit/lacrosse-tx-reader-service:${version}"
             echo "Building docker image ${docker_image_tag} ..."
