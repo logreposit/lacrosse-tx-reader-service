@@ -29,6 +29,8 @@ jobs:
             #docker buildx create --use
 
             docker context ls
+            ls /proc/sys/fs/binfmt_misc/
+            
 
             docker buildx build \
               --platform linux/arm/v7,linux/arm64/v8,linux/amd64 \
