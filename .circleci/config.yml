@@ -5,38 +5,25 @@ orbs:
   codecov: codecov/codecov@1.1.1
 
 
-executors:
-  build-container:
-    environment:
-      _JAVA_OPTIONS: "-Xmx512m"
-    docker:
-      - image: cimg/base:stable-18.04
-
-
 jobs:
   build:
-    executor: build-container
-    resource_class: small
+    resource_class: medium
+    docker:
+      - image: jdrouet/docker-with-buildx:stable
     steps:
       - checkout
       - attach_workspace:
           at: /home/circleci/
       - setup_remote_docker
       - run:
-          name: Install buildx
-          command: |
-            echo "Installing buildx for docker ..."
-            git clone git://github.com/docker/buildx && cd buildx && make install
-            echo "Successfully installed buildx for docker"
-      - run:
           name: Build
           command: |
             version=$(git describe)
             docker_image_tag="logreposit/lacrosse-tx-reader-service:${version}"
-
-            # build docker image
             echo "Building docker image ${docker_image_tag} ..."
-            docker build -t ${docker_image_tag} .
+            docker buildx build \
+              --platform linux/arm/v7,linux/arm64/v8,linux/amd64 \
+              --tag ${docker_image_tag} .
             echo "Successfully built image ${docker_image_tag}"
       - run:
           name: Saving docker image
