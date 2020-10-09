@@ -9,7 +9,7 @@ jobs:
   build:
     resource_class: medium
     docker:
-      - image: cimg/base:stable-18.04
+      - image: cimg/base:stable-20.04
     steps:
       - checkout
       - attach_workspace:
