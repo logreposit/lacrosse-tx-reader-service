@@ -32,7 +32,8 @@ jobs:
             #docker buildx create --name mybuilder
             #docker buildx use mybuilder
 
-            docker buildx create --use
+            docker context create builder
+            docker buildx create builder --use
 
             docker context ls
             ls /proc/sys/fs/binfmt_misc/
