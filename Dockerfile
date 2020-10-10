@@ -6,12 +6,12 @@ RUN apk update && \
 WORKDIR /root/tmp
 
 RUN git clone git://git.osmocom.org/rtl-sdr.git && \
+    git checkout ed0317e6a58c098874ac58b769cf2e609c18d9a5 && \
     mkdir rtl-sdr/build
 
 WORKDIR /root/tmp/rtl-sdr/build
 
-RUN git checkout ed0317e6a58c098874ac58b769cf2e609c18d9a5 && \
-    cmake ../ -DDETACH_KERNEL_DRIVER=ON && \
+RUN cmake ../ -DDETACH_KERNEL_DRIVER=ON && \
     make && \
     make install && \
     ldconfig
@@ -19,14 +19,15 @@ RUN git checkout ed0317e6a58c098874ac58b769cf2e609c18d9a5 && \
 WORKDIR /root/tmp
 
 RUN git clone https://github.com/merbanan/rtl_433.git && \
+    git checkout 6edb5d2bac0f1b41ef39e437263a43accd9bc1c4 && \
     mkdir rtl_433/build
 
 WORKDIR /root/tmp/rtl_433/build
 
-RUN git checkout 6edb5d2bac0f1b41ef39e437263a43accd9bc1c4 && \
-    cmake ../ && \
+RUN cmake ../ && \
     make && \
-    make install
+    make install && \
+    ldconfig
 
 WORKDIR /opt/logreposit/lacrosse-tx-reader-service
 
