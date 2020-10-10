@@ -13,7 +13,8 @@ WORKDIR /root/tmp/rtl-sdr/build
 RUN git checkout ed0317e6a58c098874ac58b769cf2e609c18d9a5 && \
     cmake ../ -DDETACH_KERNEL_DRIVER=ON && \
     make && \
-    make install
+    make install && \
+    ldconfig
 
 WORKDIR /root/tmp
 
