@@ -1,13 +1,24 @@
-FROM alpine:3.12
+FROM ubuntu:20.04
 
-RUN apk update && \
-    apk add --no-cache musl-dev gcc g++ make cmake libusb-dev pkgconf git python3 py3-requests py3-yaml
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get -y update && \
+    apt-get -y install \
+      cmake \
+      build-essential \
+      libusb-1.0-0-dev \
+      pkg-config \
+      git \
+      python3 \
+      python3-requests \
+      python3-yaml
 
 WORKDIR /root/tmp
 
 RUN git clone git://git.osmocom.org/rtl-sdr.git && \
-    git --git-dir ./rtl-sdr checkout ed0317e6a58c098874ac58b769cf2e609c18d9a5 && \
-    mkdir rtl-sdr/build
+    cd ./rtl-sdr && \
+    git checkout ed0317e6a58c098874ac58b769cf2e609c18d9a5 && \
+    mkdir ./build
 
 WORKDIR /root/tmp/rtl-sdr/build
 
@@ -19,8 +30,9 @@ RUN cmake ../ -DDETACH_KERNEL_DRIVER=ON && \
 WORKDIR /root/tmp
 
 RUN git clone https://github.com/merbanan/rtl_433.git && \
-    git --git-dir ./rtl_433 checkout 6edb5d2bac0f1b41ef39e437263a43accd9bc1c4 && \
-    mkdir rtl_433/build
+    cd ./rtl_433 && \
+    git checkout 6edb5d2bac0f1b41ef39e437263a43accd9bc1c4 && \
+    mkdir ./build
 
 WORKDIR /root/tmp/rtl_433/build
 
