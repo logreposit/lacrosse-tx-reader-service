@@ -36,7 +36,7 @@ jobs:
             # --tag ${docker_image_tag} \
             # --push .
             docker buildx build \
-             --platform linux/arm64/v8,linux/amd64 \
+             --platform linux/arm/v7 \
              --tag ${docker_image_tag} \
              --push .
 
